@@ -5,7 +5,7 @@ class Pojazd(ABC):
     """Klasa bazowa reprezentująca dowolny pojazd"""
     def __init__(self, model: str, rok: int):
         self._model = model
-        self._rok = roks
+        self._rok = rok
         self._predkosc = 0
 
     @property
