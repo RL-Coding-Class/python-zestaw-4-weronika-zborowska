@@ -1,63 +1,140 @@
+"""Moduł z klasami: Pojazd,Samochod, Autobus i klasami fabryk do ich tworzenia."""
 from abc import ABC, abstractmethod
 
 class Pojazd(ABC):
+    """Klasa bazowa reprezentująca dowolny pojazd"""
     def __init__(self, model: str, rok: int):
         self._model = model
         self._rok = rok
         self._predkosc = 0
 
-    # Dokoncz definicje, rowniez setter i deleter
-    # @property
-    # def predkosc(self) -> float:
+    @property
+    def predkosc(self) -> float:
+        """Getter dla prędkości pojazdu"""
+        return self._predkosc
 
+    @predkosc.setter
+    def predkosc(self, value: float):
+        """Setter dla prędkosci pojazdu. Odrzuca wartości ujemne"""
+        if value < 0:
+            raise ValueError("Prędkość nie może być ujemna!")
+        self._predkosc = value
+
+    @predkosc.deleter
+    def predkosc(self):
+        """Deleter, resetuje prędkośc do zera"""
+        self._predkosc = 0
+
+    def opis_pojazdu(self) -> str:
+        """Prosta metoda publiczna zwracająca tekstowy opis pojazdu.
+        Dodana, by uniknąć 'too-few-public-methods'."""
+        return f"Pojazd {self._model}, rok {self._rok} (prędkość: {self._predkosc})"
 
 class Samochod(Pojazd):
-# w __init__ dodaj skladowa liczba_drzwi
+    """Klasa dziedzicząca po Pojazd, reprezentuje samochod"""
+    def __init__(self, model: str, rok: int, liczba_drzwi: int = 4):
+        """Inicjalizuje obiekt Samochód."""
+        super().__init__(model, rok)
+        self.liczba_drzwi = liczba_drzwi
+
+    def opis_samochodu(self) -> str:
+        """Dodatkowa metoda publiczna, by klasa nie miała za mało metod.
+        Zwraca krótki opis samochodu."""
+        return (f"Samochód {self._model}, rok {self._rok}, "
+                f"drzwi: {self.liczba_drzwi}, prędkość: {self._predkosc}")
 
 class Autobus(Pojazd):
-# w __init__ dodaj skladowa liczba_miejsc
+    """Klasa dziedzicząca po Pojazd, reprezentuje autobus"""
+    def __init__(self, model: str, rok: int, liczba_miejsc: int = 50):
+        """Inicjalizuje obiekt autobus"""
+        super().__init__(model, rok)
+        self.liczba_miejsc = liczba_miejsc
 
+    def opis_autobusu(self) -> str:
+        """Dodatkowa metoda publiczna, aby klasa nie miała za mało metod.
+        Zwraca krótki opis autobusu."""
+        return (f"Autobus {self._model}, rok {self._rok}, "
+                f"miejsc: {self.liczba_miejsc}, prędkość: {self._predkosc}")
 
 class FabrykaPojazdow(ABC):
+    """Klasa abstrakcyjna reprezentująca ogólną fabrykę pojazdów""" 
     def __init__(self, nazwa: str):
+        """Inicjalizuje obiekt FabrykaPojazdow"""
         self._nazwa = nazwa
         self._liczba_wyprodukowanych = 0
 
-    # do uzupelnienia rozne metody jak na diagramie i w opisie
+    @property
+    def nazwa(self) -> str:
+        """Własciwość zwracająca nazwę fabryki."""
+        return self._nazwa
+
+    @abstractmethod
+    def stworz_pojazd(self, model: str, rok: int, **kwargs):
+        """Tworzy konkrenty pojazd (samochód lub autobus)
+        i inkrementuje licznik."""
+        raise NotImplementedError("Metoda stworz_pojazd nie jest zaimplementowana")
+
+    @classmethod
+    def utworz_fabryke(cls, typ_fabryki: str, nazwa: str):
+        """Metoda klasowa tworząca określony typ fabryki (samochód lub autobus)."""
+        if typ_fabryki == 'samochod':
+            return FabrykaSamochodow(nazwa)
+        if typ_fabryki == 'autobus':
+            return FabrykaAutobusow(nazwa)
+        raise ValueError("Nieznany typ fabryki!")
+
+    @staticmethod
+    def sprawdz_rok(rok: int) -> bool:
+        """Sprawdza, czy rok produkcji jest w dopuszczalnym zakresie."""
+        return 1900 <= rok <= 2024
+
+    def _zwieksz_licznik(self):
+        """Zwiększa licznik wyprodukowanych pojazdów o 1."""
+        self._liczba_wyprodukowanych += 1
+
+    def ile_wyprodukowano(self) -> int:
+        """Zwraca liczbę wszystkich wyprodukowanych pojazdów"""
+        return self._liczba_wyprodukowanych
 
 class FabrykaSamochodow(FabrykaPojazdow):
-    def stworz_pojazd(self, model: str, rok: int, liczba_drzwi: int = 4) -> Samochod:
-        # tu implementacja
-
-        return pojazd
+    """Klasa reprezentująca fabrykę samochodów"""
+    def stworz_pojazd(self, model: str, rok: int, **kwargs) -> Samochod:
+        """Tworzy obiekt klasy Samochod"""
+        if not self.sprawdz_rok(rok):
+            raise ValueError("Nieprawidłowy rok produkcji!")
+        self._zwieksz_licznik()
+        liczba_drzwi = kwargs.get('liczba_drzwi', 4)
+        return Samochod(model, rok, liczba_drzwi)
 
 class FabrykaAutobusow(FabrykaPojazdow):
-    def stworz_pojazd(self, model: str, rok: int, liczba_miejsc: int = 50) -> Autobus:
-        # tu implementacja
-
-        return pojazd
-
+    """Klasa reprezentująca fabrykę autobusów."""
+    def stworz_pojazd(self, model: str, rok: int, **kwargs) -> Autobus:
+        """Tworzy obiekt klasy Autobus."""
+        if not self.sprawdz_rok(rok):
+            raise ValueError("Nieprawidłowy rok produkcji!")
+        self._zwieksz_licznik()
+        liczba_miejsc = kwargs.get('liczba_miejsc', 50)
+        return Autobus(model, rok, liczba_miejsc)
 
 def main():
-    # Utworz fabryki pojazdow (samochodow i autobusow)
+    """Funkcja główna, która tworzy przykładowe fabryki pojazdów,
+    produkuje samochód i autobus, demonstruje działanie
+    gettera/settera/deletera prędkości i licznika wyprodukowanych pojazdów.
+    """
     fabryka_samochodow = FabrykaPojazdow.utworz_fabryke('samochod', "Fabryka Samochodów Warszawa")
     fabryka_autobusow = FabrykaPojazdow.utworz_fabryke('autobus', "Fabryka Autobusów Kraków")
 
-    # Utworzone fabryki - demonstracja @property nazwa
-    print(f"Nazwa fabryki: {fabryka_samochodow.nazwa}")  
-    print(f"Nazwa fabryki: {fabryka_autobusow.nazwa}")  
+    print(f"Nazwa fabryki: {fabryka_samochodow.nazwa}")
+    print(f"Nazwa fabryki: {fabryka_autobusow.nazwa}")
 
-    # Utworz pojazdy
     samochod = fabryka_samochodow.stworz_pojazd("Fiat", 2023, liczba_drzwi=5)
     autobus = fabryka_autobusow.stworz_pojazd("Solaris", 2023, liczba_miejsc=60)
 
-    # Demonstracja dzialania gettera, settera i deletera
-    samochod.predkosc = 50  # uzycie setter
-    print(f"Prędkość samochodu: {samochod.predkosc}")  # uzycie getter
-    del samochod.predkosc  # uzycie deleter
+    samochod.predkosc = 50
+    print(f"Prędkość samochodu: {samochod.predkosc}")
+    del samochod.predkosc
     print(f"Prędkość po reset: {samochod.predkosc}")
 
-    # Pokazanie ile pojazdow wyprodukowano
     print(f"Wyprodukowano samochodów: {fabryka_samochodow.ile_wyprodukowano()}")
     print(f"Wyprodukowano autobusów: {fabryka_autobusow.ile_wyprodukowano()}")
 
